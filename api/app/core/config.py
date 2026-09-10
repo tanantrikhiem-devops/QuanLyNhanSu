@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     )
     auth_secret_key: str = "change-this-secret-key-to-32-bytes-minimum"
     auth_token_expire_minutes: int = 60
+    auth_refresh_token_expire_days: int = 30
     cookie_secure: bool = False
     cookie_samesite: Literal["lax", "strict", "none"] = "lax"
 
