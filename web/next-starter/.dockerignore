@@ -1,0 +1,26 @@
+# Không copy vào build context — vừa nhanh vừa tránh lẫn artefact của máy host
+node_modules
+.next
+out
+build
+coverage
+
+.git
+.gitignore
+.github
+
+.env
+.env.*
+!.env.example
+
+Dockerfile*
+compose.yaml
+docker-compose*.yml
+.dockerignore
+
+README.md
+AGENTS.md
+CLAUDE.md
+*.log
+.DS_Store
+*.tsbuildinfo
