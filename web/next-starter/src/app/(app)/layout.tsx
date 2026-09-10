@@ -1,14 +1,9 @@
-import type { UserMenuUser } from "@/components/layout";
-
 import { AppLayoutClient } from "./app-layout-client";
 
-/** Server Component: nơi lấy dữ liệu người dùng (session, DB…) rồi đưa xuống shell. */
+/**
+ * Người dùng đến từ `/users/me` phía client (access token nằm trong RAM của
+ * browser nên server không đọc được) — xem `AppLayoutClient`.
+ */
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const user: UserMenuUser = {
-    name: "Phan Thành Long",
-    email: "long.thanhphan04@gmail.com",
-    role: "Quản trị viên",
-  };
-
-  return <AppLayoutClient user={user}>{children}</AppLayoutClient>;
+  return <AppLayoutClient>{children}</AppLayoutClient>;
 }

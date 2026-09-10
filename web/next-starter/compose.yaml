@@ -20,6 +20,11 @@ services:
     environment:
       # Turbopack cần polling khi file đến từ bind mount (Windows/macOS).
       WATCHPACK_POLLING: "true"
+      # Trong container, "localhost" là chính container — API nằm ở máy host.
+      API_BASE_URL: ${API_BASE_URL:-http://host.docker.internal:8000}
+    extra_hosts:
+      # Linux không tự có host.docker.internal như Docker Desktop.
+      - "host.docker.internal:host-gateway"
     stdin_open: true
     tty: true
 
@@ -27,11 +32,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        # NEXT_PUBLIC_* phải truyền lúc build, không phải lúc chạy.
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://jsonplaceholder.typicode.com}
     ports:
       - "3000:3000"
     environment:
       NODE_ENV: production
+      # Biến chỉ dùng phía server → đặt lúc chạy, KHÔNG cần build lại image.
+      API_BASE_URL: ${API_BASE_URL:-http://host.docker.internal:8000}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped

@@ -19,10 +19,9 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
 # ---------- builder ----------
 FROM base AS builder
 
-# Biến NEXT_PUBLIC_* được nhúng vào bundle lúc BUILD, không phải lúc chạy.
-# Muốn đổi giá trị thì phải build lại image (hoặc đọc qua Server Component).
-ARG NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+# Không có NEXT_PUBLIC_* nào ở đây: browser chỉ gọi `/api/bff` cùng origin,
+# còn địa chỉ FastAPI (API_BASE_URL) là biến runtime đọc phía server.
+# Thêm ARG ở đây chỉ khi thực sự cần nhúng giá trị vào bundle lúc build.
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
