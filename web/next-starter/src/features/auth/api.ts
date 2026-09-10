@@ -1,7 +1,5 @@
 import { apiFetch } from "@/lib/api/http";
-import { setAccessToken } from "@/lib/api/token-store";
 import {
-  sessionResponseSchema,
   userResponseSchema,
   type LoginInput,
   type RegisterInput,
@@ -9,19 +7,18 @@ import {
 } from "@/schemas/auth";
 
 /**
- * Lớp gọi API auth. Path tính từ `/api/v1` của FastAPI; `apiFetch` tự gắn tiền
- * tố `/api/bff` để đi qua proxy cùng origin.
+ * Lớp gọi API auth. `path` tính từ `/api/v1` của FastAPI.
+ *
+ * Không hàm nào ở đây đụng tới token: `access_token` và `refresh_token` là cookie
+ * httpOnly do backend set và xoá, browser tự đính kèm theo mỗi request.
  */
 
-/**
- * `POST /auth/login` — backend set cả hai cookie, proxy bóc `access_token`
- * xuống body và `apiFetch` cất nó vào RAM. `refresh_token` ở lại httpOnly.
- */
+/** `POST /auth/login` — backend set cả hai cookie xác thực. */
 export async function login(input: LoginInput): Promise<User> {
   const response = await apiFetch("/auth/login", {
     method: "POST",
     body: input,
-    schema: sessionResponseSchema,
+    schema: userResponseSchema,
     skipRefresh: true,
   });
   return response.data;
@@ -45,13 +42,9 @@ export async function getMe(): Promise<User> {
 }
 
 /**
- * `POST /auth/logout` — backend xoá cả hai cookie. Token trong RAM phải xoá tay
- * vì nó chưa bao giờ là cookie của trình duyệt.
+ * `POST /auth/logout` — backend xoá cả hai cookie.
+ * Không có gì để dọn phía client: token chưa bao giờ nằm trong JavaScript.
  */
 export async function logout(): Promise<void> {
-  try {
-    await apiFetch("/auth/logout", { method: "POST", skipRefresh: true });
-  } finally {
-    setAccessToken(null);
-  }
+  await apiFetch("/auth/logout", { method: "POST", skipRefresh: true });
 }

@@ -1,139 +1,83 @@
 import type { z } from "zod";
 
-import { BFF_PREFIX } from "@/lib/api/config";
+import { API_URL, API_VERSION_PREFIX } from "@/lib/api/config";
 import { ApiError, toApiError } from "@/lib/api/errors";
-import { getAccessToken, setAccessToken } from "@/lib/api/token-store";
 
-/**
- * Http client phía browser. Ba việc nó lo, để hook và component không phải lo:
- *  - gắn access token (đang nằm trong RAM) vào header `Authorization`;
- *  - tự gọi refresh đúng MỘT lần khi gặp 401 rồi thử lại request;
- *  - validate response bằng zod, ném `ApiError` khi backend báo lỗi.
- */
+type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
-export type RequestOptions<TSchema extends z.ZodType> = {
-  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
-  /** Body JSON; tự `JSON.stringify`. */
+type Options<S extends z.ZodType = z.ZodType> = {
+  method?: Method;
   body?: unknown;
-  /** Schema để validate response. Bỏ trống nếu không cần dữ liệu trả về. */
-  schema?: TSchema;
-  /** Bỏ qua cơ chế tự refresh — dùng cho chính endpoint refresh/login. */
+  /** Không truyền ⇒ hàm trả `void`. */
+  schema?: S;
+  /** Bỏ qua tự refresh — dùng cho login/logout. */
   skipRefresh?: boolean;
   signal?: AbortSignal;
 };
 
-async function rawRequest(
-  path: string,
-  options: { method: string; body?: unknown; signal?: AbortSignal },
-): Promise<Response> {
-  const headers = new Headers({ accept: "application/json" });
+const TIMEOUT_MS = 15_000;
 
-  const token = getAccessToken();
-  if (token) headers.set("authorization", `Bearer ${token}`);
-  if (options.body !== undefined) headers.set("content-type", "application/json");
-
-  return fetch(`${BFF_PREFIX}${path}`, {
-    method: options.method,
-    headers,
-    body: options.body === undefined ? undefined : JSON.stringify(options.body),
-    // Cùng origin, nhưng khai báo tường minh cho rõ ý: cookie refresh phải đi kèm.
-    credentials: "same-origin",
-    signal: options.signal,
+function send(path: string, o: { method: Method; body?: unknown; signal?: AbortSignal }) {
+  const hasBody = o.method !== "GET" && o.body !== undefined;
+  return fetch(`${API_URL}${API_VERSION_PREFIX}${path}`, {
+    method: o.method,
+    headers: hasBody ? { "content-type": "application/json" } : undefined,
+    body: hasBody ? JSON.stringify(o.body) : undefined,
+    credentials: "include",
+    signal: o.signal
+      ? AbortSignal.any([o.signal, AbortSignal.timeout(TIMEOUT_MS)])
+      : AbortSignal.timeout(TIMEOUT_MS),
+  }).catch((error: unknown) => {
+    if (o.signal?.aborted) throw error; // caller huỷ — để TanStack Query nhận đúng
+    const timedOut = error instanceof DOMException && error.name === "TimeoutError";
+    throw new ApiError(timedOut ? 408 : 0, timedOut ? "Máy chủ phản hồi quá chậm" : "Không kết nối được tới máy chủ", {
+      cause: error,
+    });
   });
 }
 
-/**
- * Gọi refresh và ghi token mới vào RAM.
- * Gom về một promise duy nhất để nhiều request cùng gặp 401 không tạo ra
- * nhiều lượt refresh song song (single-flight).
- */
-let inflightRefresh: Promise<string | null> | null = null;
+/** Gom nhiều 401 cùng lúc về một lượt refresh duy nhất. */
+let inflight: Promise<boolean> | null = null;
 
-export function refreshSession(): Promise<string | null> {
-  const pending =
-    inflightRefresh ??
-    (async () => {
-      try {
-        const response = await rawRequest("/auth/refresh", { method: "POST" });
-        const payload: unknown = response.ok ? await response.json() : null;
-        const token =
-          payload !== null && typeof payload === "object" && "accessToken" in payload
-            ? payload.accessToken
-            : null;
-
-        if (typeof token !== "string" || token.length === 0) {
-          setAccessToken(null);
-          return null;
-        }
-        setAccessToken(token);
-        return token;
-      } catch {
-        setAccessToken(null);
-        return null;
-      } finally {
-        inflightRefresh = null;
-      }
-    })();
-
-  inflightRefresh = pending;
-  return pending;
+export function refreshSession(): Promise<boolean> {
+  inflight ??= send("/auth/refresh", { method: "POST" })
+    .then((r) => r.ok)
+    .catch(() => false)
+    .finally(() => {
+      inflight = null;
+    });
+  return inflight;
 }
 
-/**
- * Gọi API qua BFF. `path` tính từ `/api/v1` của backend, ví dụ `"/users/me"`.
- */
-export async function apiFetch<TSchema extends z.ZodType>(
+export async function apiFetch<S extends z.ZodType>(
   path: string,
-  options: RequestOptions<TSchema> = {},
-): Promise<z.infer<TSchema>> {
+  options: Options<S> & { schema: S },
+): Promise<z.infer<S>>;
+export async function apiFetch(path: string, options?: Omit<Options, "schema">): Promise<void>;
+export async function apiFetch(path: string, options: Options = {}): Promise<unknown> {
   const { method = "GET", body, schema, skipRefresh = false, signal } = options;
+  const req = { method, body, signal };
 
-  // Token trong RAM mất sau mỗi lần F5 — thử khôi phục phiên bằng cookie refresh
-  // trước khi bắn request thật, đỡ tốn một vòng 401.
-  let refreshed = false;
-  if (!skipRefresh && getAccessToken() === null) {
-    refreshed = true;
-    if ((await refreshSession()) === null) {
-      throw new ApiError(401, "Phiên đăng nhập đã hết hạn");
-    }
+  let response = await send(path, req);
+
+  // Access token hết hạn: refresh một lần rồi thử lại một lần.
+  if (response.status === 401 && !skipRefresh) {
+    if (!(await refreshSession())) throw new ApiError(401, "Phiên đăng nhập đã hết hạn");
+    response = await send(path, req);
   }
 
-  let response = await rawRequest(path, { method, body, signal });
-
-  // Access token hết hạn giữa chừng: refresh một lần rồi thử lại đúng một lần.
-  if (response.status === 401 && !skipRefresh && !refreshed) {
-    if ((await refreshSession()) === null) {
-      throw new ApiError(401, "Phiên đăng nhập đã hết hạn");
-    }
-    response = await rawRequest(path, { method, body, signal });
-  }
-
-  const text = await response.text();
-  let payload: unknown = null;
-  if (text.length > 0) {
-    try {
-      payload = JSON.parse(text);
-    } catch {
-      payload = null;
-    }
-  }
-
-  if (!response.ok) {
-    if (response.status === 401) setAccessToken(null);
-    throw toApiError(response.status, payload);
-  }
-
-  // Proxy đính token mới vào body của login/refresh — nhặt lấy trước khi validate.
-  if (payload !== null && typeof payload === "object" && "accessToken" in payload) {
-    const token = payload.accessToken;
-    if (typeof token === "string") setAccessToken(token.length > 0 ? token : null);
-  }
-
-  if (!schema) return undefined as z.infer<TSchema>;
+  const payload: unknown = await response.json().catch(() => null);
+  if (!response.ok) throw toApiError(response.status, payload);
+  if (!schema) return undefined;
 
   const parsed = schema.safeParse(payload);
   if (!parsed.success) {
-    throw new ApiError(response.status, "Dữ liệu API trả về không đúng định dạng mong đợi");
+    if (process.env.NODE_ENV !== "production") {
+      console.error(`apiFetch("${path}") lệch schema:`, parsed.error.issues, payload);
+    }
+    throw new ApiError(response.status, "Dữ liệu API trả về không đúng định dạng mong đợi", {
+      cause: parsed.error,
+    });
   }
   return parsed.data;
 }

@@ -23,20 +23,13 @@ export const loginInputSchema = z.object({
 /** `UserCreate` — body của `POST /api/v1/auth/register`. */
 export const registerInputSchema = loginInputSchema;
 
-/** `ApiResponse[UserRead]` — login, refresh, register và `/users/me` dùng chung. */
-export const userResponseSchema = apiResponseSchema(userSchema);
-
 /**
- * Response của login/refresh sau khi đi qua BFF proxy.
- * `accessToken` KHÔNG do FastAPI trả — proxy bóc từ header `Set-Cookie`
- * rồi đưa xuống body để client giữ trong RAM. Chuỗi rỗng nghĩa là backend
- * vừa xoá cookie (đăng xuất / token bị thu hồi).
+ * `ApiResponse[UserRead]` — login, refresh, register và `/users/me` dùng chung.
+ * Access token đi ra bằng header `x-access-token` của BFF proxy, không nằm trong
+ * body, nên schema này khớp đúng 1-1 với backend.
  */
-export const sessionResponseSchema = userResponseSchema.extend({
-  accessToken: z.string().nullish(),
-});
+export const userResponseSchema = apiResponseSchema(userSchema);
 
 export type User = z.infer<typeof userSchema>;
 export type LoginInput = z.infer<typeof loginInputSchema>;
 export type RegisterInput = z.infer<typeof registerInputSchema>;
-export type SessionResponse = z.infer<typeof sessionResponseSchema>;

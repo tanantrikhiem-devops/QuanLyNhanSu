@@ -1,40 +1,34 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { useMe } from "@/features/auth/use-auth";
-import { Skeleton } from "@/components/ui/skeleton";
-import type { User } from "@/schemas/auth";
+import { toRoute } from "@/lib/nav";
 
 /**
- * Chốt chặn phía client. `src/proxy.ts` đã chặn sẵn ở tầng request dựa trên sự
- * tồn tại của `refresh_token`, nhưng cookie có mà token hỏng/hết hạn thì chỉ
- * `/users/me` mới biết — nên vẫn cần lớp này.
+ * Chốt chặn duy nhất của ứng dụng.
  *
- * Nhận `children` dạng render prop để nhánh đã đăng nhập luôn có `user` chắc chắn
- * khác `undefined`, không phải `user!` ở mọi nơi.
+ * Không còn guard phía server: cookie xác thực thuộc về origin của backend nên
+ * server Next không đọc được. Ai đã đăng nhập hay chưa, chỉ `/users/me` trả lời
+ * được — và câu trả lời đó chỉ có ở phía client.
+ *
+ * QUAN TRỌNG: component này LUÔN render `children`, kể cả lúc đang tải. Next 16
+ * kiểm tra instant navigation và báo `instant-unrendered-segment` nếu layout bỏ
+ * qua slot `children`. Chỗ nào cần dữ liệu người dùng thì tự hiện skeleton tại
+ * chỗ đó, không chặn cả cây con.
  */
-export function RequireAuth({ children }: { children: (user: User) => React.ReactNode }) {
-  const { data: user, isPending, isError } = useMe();
+export function RequireAuth({ children }: { children: React.ReactNode }) {
+  const { isError } = useMe();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    if (isError) router.replace("/dang-nhap");
-  }, [isError, router]);
+    if (!isError) return;
+    // Nhớ trang đang xem để đăng nhập xong quay lại đúng chỗ.
+    const target = pathname === "/" ? "/dang-nhap" : `/dang-nhap?tiep-tuc=${encodeURIComponent(pathname)}`;
+    router.replace(toRoute(target));
+  }, [isError, pathname, router]);
 
-  if (isPending) return <AuthPlaceholder />;
-  if (user === undefined) return <AuthPlaceholder />;
-
-  return <>{children(user)}</>;
-}
-
-function AuthPlaceholder() {
-  return (
-    <div className="flex flex-col gap-3 p-6" aria-busy="true">
-      <Skeleton className="h-8 w-48" />
-      <Skeleton className="h-4 w-full max-w-md" />
-      <Skeleton className="h-4 w-full max-w-sm" />
-    </div>
-  );
+  return <>{children}</>;
 }
