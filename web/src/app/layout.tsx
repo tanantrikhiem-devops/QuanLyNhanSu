@@ -49,10 +49,14 @@ const themeInitScript = `
       root.style.setProperty("--scheme-foreground", c.foreground);
     }
     var fonts = {
-      "Inter / Hệ thống": "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-      "Be Vietnam Pro / Roboto": "'Be Vietnam Pro', 'Roboto', system-ui, sans-serif",
-      "Segoe UI / Tahoma": "'Segoe UI', 'Tahoma', system-ui, sans-serif",
-      "Nunito Sans / Verdana": "'Nunito Sans', 'Verdana', system-ui, sans-serif"
+      "Inter / Hiện đại": "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+      "Roboto / Google": "'Roboto', Arial, sans-serif",
+      "Be Vietnam Pro / Chuẩn Việt": "'Be Vietnam Pro', sans-serif",
+      "Nunito Sans / Thân thiện": "'Nunito Sans', sans-serif",
+      "Inter / Hệ thống": "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+      "Be Vietnam Pro / Roboto": "'Be Vietnam Pro', sans-serif",
+      "Segoe UI / Tahoma": "'Segoe UI', 'Tahoma', sans-serif",
+      "Nunito Sans / Verdana": "'Nunito Sans', sans-serif"
     };
     if (state.font && fonts[state.font]) {
       root.style.setProperty("--app-font-family", fonts[state.font]);
@@ -65,6 +69,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="vi" suppressHydrationWarning>
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Nunito+Sans:ital,opsz,wght@0,6..12,400;0,6..12,600;0,6..12,700;0,6..12,800;1,6..12,400&family=Roboto:ital,wght@0,400;0,500;0,700;0,900;1,400&display=swap"
+          rel="stylesheet"
+        />
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body>

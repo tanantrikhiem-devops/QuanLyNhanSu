@@ -122,17 +122,23 @@ export const palettes: Palette[] = [
 ];
 
 export const fonts = [
-  "Inter / Hệ thống",
-  "Be Vietnam Pro / Roboto",
-  "Segoe UI / Tahoma",
-  "Nunito Sans / Verdana",
+  "Inter / Hiện đại",
+  "Roboto / Google",
+  "Be Vietnam Pro / Chuẩn Việt",
+  "Nunito Sans / Thân thiện",
 ];
 
 export const fontFamilies: Record<string, string> = {
-  "Inter / Hệ thống": "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-  "Be Vietnam Pro / Roboto": "'Be Vietnam Pro', 'Roboto', system-ui, sans-serif",
-  "Segoe UI / Tahoma": "'Segoe UI', 'Tahoma', system-ui, sans-serif",
-  "Nunito Sans / Verdana": "'Nunito Sans', 'Verdana', system-ui, sans-serif",
+  "Inter / Hiện đại": "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+  "Roboto / Google": "'Roboto', Arial, sans-serif",
+  "Be Vietnam Pro / Chuẩn Việt": "'Be Vietnam Pro', sans-serif",
+  "Nunito Sans / Thân thiện": "'Nunito Sans', sans-serif",
+
+  // Backwards compatibility mappings for older saved preferences
+  "Inter / Hệ thống": "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+  "Be Vietnam Pro / Roboto": "'Be Vietnam Pro', sans-serif",
+  "Segoe UI / Tahoma": "'Segoe UI', 'Tahoma', sans-serif",
+  "Nunito Sans / Verdana": "'Nunito Sans', sans-serif",
 };
 
 export const defaultThemeConfig: ColorSchemeConfig = {
@@ -176,6 +182,9 @@ export function applyThemeToDom(colors: ColorSchemeConfig["colors"], fontName: s
   root.style.setProperty("--card-foreground", colors.foreground);
   root.style.setProperty("--scheme-foreground", colors.foreground);
 
-  const ff = fontFamilies[fontName] || fontFamilies[fonts[0]!]!;
+  const ff = fontFamilies[fontName] || fontFamilies[fonts[0]!] || fontName;
   root.style.setProperty("--app-font-family", ff);
+  if (document.body) {
+    document.body.style.fontFamily = ff;
+  }
 }

@@ -42,14 +42,14 @@ describe("Theme Color Scheme Store", () => {
   });
 
   it("thay đổi phông chữ hệ thống", () => {
-    useThemeStore.getState().setFont("Be Vietnam Pro / Roboto");
+    useThemeStore.getState().setFont("Roboto / Google");
     const state = useThemeStore.getState();
-    expect(state.config.font).toBe("Be Vietnam Pro / Roboto");
+    expect(state.config.font).toBe("Roboto / Google");
   });
 
   it("khôi phục mặc định reset về legal-green", () => {
     useThemeStore.getState().setColor("primary", "#123456");
-    useThemeStore.getState().setFont("Nunito Sans / Verdana");
+    useThemeStore.getState().setFont("Nunito Sans / Thân thiện");
     useThemeStore.getState().reset();
 
     const state = useThemeStore.getState();
