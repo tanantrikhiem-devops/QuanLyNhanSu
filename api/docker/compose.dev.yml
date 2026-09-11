@@ -1,16 +1,16 @@
-name: test-fastapi
+name: quan-ly-nhan-su
 
 services:
   db-dev:
     image: postgres:18-alpine
-    container_name: test-fastapi-db-dev
+    container_name: quan-ly-nhan-su-db-dev
     restart: always
     environment:
       POSTGRES_USER: ${DATABASE_USER:-postgres}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-thisisapassword}
       POSTGRES_DB: ${DATABASE_DB:-test_fastapi_dev}
     volumes:
-      - test-fastapi-db-dev-data:/var/lib/postgresql/18/data
+      - quan-ly-nhan-su-db-dev-data:/var/lib/postgresql/18/data
     ports:
       - "${DATABASE_PORT:-5433}:5432"
     healthcheck:
@@ -25,4 +25,4 @@ services:
       start_period: 10s
 
 volumes:
-  test-fastapi-db-dev-data:
+  quan-ly-nhan-su-db-dev-data:
