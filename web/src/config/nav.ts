@@ -17,7 +17,7 @@ export const navGroups: NavGroup[] = [
         badge: 3,
       },
       { key: "simulation", label: "Mô phỏng hệ thống", href: "/mo-phong", icon: PlayCircle },
-      { key: "appearance", label: "Giao diện & màu sắc", href: "/giao-dien", icon: Palette },
+      { key: "appearance", label: "Giao diện & màu sắc", href: "/color-scheme", icon: Palette },
     ],
   },
 ];
