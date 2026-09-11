@@ -1,21 +1,18 @@
 import type { z } from "zod";
 
-import { API_URL, API_VERSION_PREFIX } from "@/lib/api/config";
-import { ApiError, toApiError } from "@/lib/api/errors";
+import { endpoints } from "@/lib/api/endpoints";
+import { API_URL, API_VERSION_PREFIX, REQUEST_TIMEOUT_MS } from "@/lib/api/config";
+import { ApiError, NETWORK_ERROR_STATUS, TIMEOUT_ERROR_STATUS, toApiError } from "@/lib/api/errors";
 
 type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 type Options<S extends z.ZodType = z.ZodType> = {
   method?: Method;
   body?: unknown;
-  /** Không truyền ⇒ hàm trả `void`. */
   schema?: S;
-  /** Bỏ qua tự refresh — dùng cho login/logout. */
   skipRefresh?: boolean;
   signal?: AbortSignal;
 };
-
-const TIMEOUT_MS = 15_000;
 
 function send(path: string, o: { method: Method; body?: unknown; signal?: AbortSignal }) {
   const hasBody = o.method !== "GET" && o.body !== undefined;
@@ -25,28 +22,40 @@ function send(path: string, o: { method: Method; body?: unknown; signal?: AbortS
     body: hasBody ? JSON.stringify(o.body) : undefined,
     credentials: "include",
     signal: o.signal
-      ? AbortSignal.any([o.signal, AbortSignal.timeout(TIMEOUT_MS)])
-      : AbortSignal.timeout(TIMEOUT_MS),
+      ? AbortSignal.any([o.signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)])
+      : AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   }).catch((error: unknown) => {
-    if (o.signal?.aborted) throw error; // caller huỷ — để TanStack Query nhận đúng
+    if (o.signal?.aborted) throw error;
     const timedOut = error instanceof DOMException && error.name === "TimeoutError";
-    throw new ApiError(timedOut ? 408 : 0, timedOut ? "Máy chủ phản hồi quá chậm" : "Không kết nối được tới máy chủ", {
-      cause: error,
-    });
+    throw new ApiError(
+      timedOut ? TIMEOUT_ERROR_STATUS : NETWORK_ERROR_STATUS,
+      timedOut ? "Máy chủ phản hồi quá chậm" : "Không kết nối được tới máy chủ",
+      { cause: error },
+    );
   });
 }
 
-/** Gom nhiều 401 cùng lúc về một lượt refresh duy nhất. */
-let inflight: Promise<boolean> | null = null;
+type RefreshOutcome = "ok" | "expired" | "network";
 
-export function refreshSession(): Promise<boolean> {
-  inflight ??= send("/auth/refresh", { method: "POST" })
-    .then((r) => r.ok)
-    .catch(() => false)
+let inflight: Promise<RefreshOutcome> | null = null;
+
+let sessionKnownDead = false;
+
+function refreshOnce(): Promise<RefreshOutcome> {
+  inflight ??= send(endpoints.auth.refresh, { method: "POST" })
+    .then((r): RefreshOutcome => (r.ok ? "ok" : "expired"))
+    .catch((): RefreshOutcome => "network")
     .finally(() => {
       inflight = null;
     });
   return inflight;
+}
+
+export async function refreshSession(): Promise<boolean> {
+  const outcome = await refreshOnce();
+  if (outcome === "ok") sessionKnownDead = false;
+  if (outcome === "expired") sessionKnownDead = true;
+  return outcome === "ok";
 }
 
 export async function apiFetch<S extends z.ZodType>(
@@ -60,11 +69,21 @@ export async function apiFetch(path: string, options: Options = {}): Promise<unk
 
   let response = await send(path, req);
 
-  // Access token hết hạn: refresh một lần rồi thử lại một lần.
   if (response.status === 401 && !skipRefresh) {
-    if (!(await refreshSession())) throw new ApiError(401, "Phiên đăng nhập đã hết hạn");
+    if (sessionKnownDead) throw new ApiError(401, "Phiên đăng nhập đã hết hạn");
+
+    const outcome = await refreshOnce();
+    if (outcome === "network") {
+      throw new ApiError(NETWORK_ERROR_STATUS, "Không kết nối được tới máy chủ");
+    }
+    if (outcome === "expired") {
+      sessionKnownDead = true;
+      throw new ApiError(401, "Phiên đăng nhập đã hết hạn");
+    }
     response = await send(path, req);
   }
+
+  if (response.ok) sessionKnownDead = false;
 
   const payload: unknown = await response.json().catch(() => null);
   if (!response.ok) throw toApiError(response.status, payload);

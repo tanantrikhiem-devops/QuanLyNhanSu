@@ -1,47 +1,53 @@
-import { connection } from "next/server";
 import { cacheLife, cacheTag } from "next/cache";
 
-export type Stat = {
-  label: string;
-  value: string;
-  delta: string;
-  tone: "success" | "warning" | "destructive" | "muted";
-};
+import type { WorkflowTemplate } from "@/lib/api/contracts";
 
-/**
- * Dữ liệu ĐƯỢC CACHE.
- * `"use cache"` để Next tự sinh cache key; `cacheLife` đặt vòng đời;
- * `cacheTag` để sau này gọi `updateTag("dashboard-stats")` trong Server Action.
- */
-export async function getDashboardStats(): Promise<Stat[]> {
+export async function getWorkflowTemplates(): Promise<WorkflowTemplate[]> {
   "use cache";
   cacheLife("minutes");
-  cacheTag("dashboard-stats");
+  cacheTag("workflow-templates");
 
-  await new Promise((r) => setTimeout(r, 300)); // giả lập truy vấn
+  await new Promise((r) => setTimeout(r, 300));
 
   return [
-    { label: "Công việc đang mở", value: "128", delta: "+12%", tone: "success" },
-    { label: "Quá hạn SLA", value: "7", delta: "-3", tone: "destructive" },
-    { label: "Biểu mẫu chờ duyệt", value: "34", delta: "+5", tone: "warning" },
-    { label: "Quy trình đang chạy", value: "19", delta: "0", tone: "muted" },
+    {
+      id: 1,
+      code: "QT-PL-01",
+      name: "Quy trình tư vấn pháp lý",
+      description: "Áp dụng cho hồ sơ tư vấn, thương lượng và tranh tụng của khách hàng doanh nghiệp.",
+      icon: "legal",
+      status: "active",
+      locked: true,
+      stage_count: 5,
+      task_count: 3,
+      owner_name: "LS. Nguyễn Hoàng Nam",
+      updated_at: "2026-08-26",
+    },
+    {
+      id: 2,
+      code: "QT-TN-02",
+      name: "Quy trình toà nhà",
+      description: "Hồ sơ pháp lý dự án toà nhà, căn hộ: thẩm định, cấp phép và bàn giao.",
+      icon: "building",
+      status: "draft",
+      locked: false,
+      stage_count: 0,
+      task_count: 0,
+      owner_name: "LS. Phạm Thu Hương",
+      updated_at: "2026-08-12",
+    },
+    {
+      id: 3,
+      code: "QT-NĐ-03",
+      name: "Quy trình nhà đất",
+      description: "Chuyển nhượng, tách thửa, cấp giấy chứng nhận quyền sử dụng đất.",
+      icon: "land",
+      status: "draft",
+      locked: false,
+      stage_count: 0,
+      task_count: 0,
+      owner_name: "LS. Trần Minh Khoa",
+      updated_at: "2026-08-03",
+    },
   ];
-}
-
-/**
- * Dữ liệu KHÔNG cache — `connection()` báo cho Next biết phần này phải đợi request thật,
- * nên nó bị đẩy ra khỏi shell tĩnh và stream qua <Suspense>.
- */
-export async function getLiveActivity(): Promise<{ at: string; items: string[] }> {
-  await connection();
-  await new Promise((r) => setTimeout(r, 600));
-
-  return {
-    at: new Date().toLocaleTimeString("vi-VN"),
-    items: [
-      "Nguyễn An gửi biểu mẫu Đề nghị thanh toán",
-      "Quy trình Duyệt hợp đồng chuyển sang bước Pháp chế",
-      "3 công việc sắp chạm hạn SLA trong 2 giờ tới",
-    ],
-  };
 }

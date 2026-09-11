@@ -1,8 +1,12 @@
-/** Khung cho các trang chưa đăng nhập — không có sidebar, không gọi API. */
+import { AuthBrandPanel } from "@/features/auth";
+
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="bg-muted/40 flex min-h-svh items-center justify-center px-4 py-10">
-      <div className="w-full max-w-sm">{children}</div>
-    </div>
+    <main className="bg-auth-bg text-auth-heading flex min-h-screen flex-col lg:flex-row">
+      <AuthBrandPanel />
+      <section className="flex min-w-0 flex-1 items-center justify-center px-5 py-10 sm:px-8 sm:py-12 lg:px-12">
+        {children}
+      </section>
+    </main>
   );
 }

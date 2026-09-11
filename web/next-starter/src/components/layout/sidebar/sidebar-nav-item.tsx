@@ -4,7 +4,6 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { ChevronRight } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { isNavBranchActive, isNavItemActive, toRoute } from "@/lib/nav";
@@ -27,7 +26,7 @@ type SidebarNavItemProps = {
 };
 
 const rowClass =
-  "group/item relative flex h-9 w-full items-center gap-3 rounded-lg px-2.5 text-sm font-medium transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-sidebar-ring/50";
+  "group/item relative flex min-h-11 w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-[0.8125rem] leading-tight font-semibold transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-sidebar-ring/50";
 
 export function SidebarNavItem({
   item,
@@ -52,7 +51,7 @@ export function SidebarNavItem({
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -6 }}
           transition={{ duration: 0.15 }}
-          className="flex-1 truncate text-left"
+          className="line-clamp-2 flex-1 text-left"
         >
           {item.label}
         </motion.span>
@@ -62,34 +61,38 @@ export function SidebarNavItem({
 
   const badge =
     item.badge !== undefined && !isIconOnly ? (
-      <Badge variant={active ? "default" : "muted"} className="ml-auto shrink-0">
+      <span className="bg-brand-gold text-brand-ink ml-auto grid h-5 min-w-5 shrink-0 place-items-center rounded-full px-1.5 text-[0.625rem] font-bold">
         {item.badge}
-      </Badge>
+      </span>
     ) : null;
 
   const indicator = active ? (
     <motion.span
       layoutId={`${layoutIdPrefix}-active`}
       transition={{ type: "spring", stiffness: 420, damping: 34 }}
-      className="bg-sidebar-accent absolute inset-0 -z-10 rounded-lg"
-    />
+      className="bg-sidebar-accent absolute inset-0 -z-10 rounded-lg shadow-[0_6px_16px_rgb(0_0_0/0.25)]"
+    >
+      {depth === 0 && <span className="bg-brand-gold absolute inset-y-2 -left-2.5 w-1 rounded-r" />}
+    </motion.span>
   ) : null;
 
   const content = (
     <>
       {indicator}
       {Icon ? (
-        <Icon
+        <span
           className={cn(
-            "size-4 shrink-0 transition-colors",
-            active ? "text-foreground" : "text-muted-foreground group-hover/item:text-foreground",
+            "grid size-8 shrink-0 place-items-center rounded-md transition-colors",
+            active ? "bg-white/15" : "bg-white/[0.06] group-hover/item:bg-white/10",
           )}
-        />
+        >
+          <Icon className="size-4" />
+        </span>
       ) : (
         <span
           className={cn(
             "size-1.5 shrink-0 rounded-full transition-colors",
-            active ? "bg-foreground" : "bg-muted-foreground/40",
+            active ? "bg-sidebar-accent-foreground" : "bg-sidebar-muted",
           )}
         />
       )}
@@ -99,7 +102,7 @@ export function SidebarNavItem({
         <motion.span
           animate={{ rotate: open ? 90 : 0 }}
           transition={{ duration: 0.18 }}
-          className="text-muted-foreground ml-auto"
+          className="text-sidebar-muted ml-auto"
         >
           <ChevronRight className="size-4" />
         </motion.span>
@@ -116,7 +119,9 @@ export function SidebarNavItem({
       onClick={() => onToggleOpen(item.key)}
       className={cn(
         rowClass,
-        active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+        active
+          ? "text-sidebar-accent-foreground"
+          : "text-sidebar-foreground/85 hover:text-sidebar-foreground hover:bg-white/5",
         item.disabled && "pointer-events-none opacity-50",
         isIconOnly && "justify-center px-0",
       )}
@@ -132,7 +137,9 @@ export function SidebarNavItem({
       onClick={onNavigate}
       className={cn(
         rowClass,
-        active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+        active
+          ? "text-sidebar-accent-foreground"
+          : "text-sidebar-foreground/85 hover:text-sidebar-foreground hover:bg-white/5",
         item.disabled && "pointer-events-none opacity-50",
         isIconOnly && "justify-center px-0",
       )}

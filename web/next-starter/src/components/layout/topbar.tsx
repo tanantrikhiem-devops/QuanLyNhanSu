@@ -33,7 +33,7 @@ export function Topbar({
   return (
     <header
       className={cn(
-        "bg-background/80 border-border sticky top-0 z-20 flex h-topbar items-center gap-3 border-b px-3 backdrop-blur-md sm:px-4",
+        "bg-card border-border sticky top-0 z-20 flex h-topbar items-center gap-3 border-b px-3 sm:px-5",
         className,
       )}
     >

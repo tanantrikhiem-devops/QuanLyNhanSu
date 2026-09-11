@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -48,11 +48,11 @@ function Brand({
     <Link
       href={toRoute(brandHref ?? "/")}
       className={cn(
-        "flex h-topbar items-center gap-2.5 px-3 transition-opacity hover:opacity-80",
+        "flex h-topbar items-center gap-2.5 pr-11 pl-3.5 transition-opacity hover:opacity-90",
         iconOnly && "justify-center px-0",
       )}
     >
-      <span className="bg-primary text-primary-foreground grid size-8 shrink-0 place-items-center rounded-lg text-sm font-bold">
+      <span className="bg-brand-gold text-brand-ink grid size-8 shrink-0 place-items-center rounded-md text-xs font-bold">
         {brandLogo ?? (brandTitle?.charAt(0) ?? "A")}
       </span>
 
@@ -65,9 +65,9 @@ function Brand({
             transition={{ duration: 0.15 }}
             className="flex min-w-0 flex-col leading-tight"
           >
-            <span className="truncate text-sm font-semibold">{brandTitle ?? "App"}</span>
+            <span className="truncate text-sm font-bold tracking-wide">{brandTitle ?? "App"}</span>
             {brandSubtitle && (
-              <span className="text-muted-foreground truncate text-xs">{brandSubtitle}</span>
+              <span className="text-sidebar-muted truncate text-[0.6875rem]">{brandSubtitle}</span>
             )}
           </motion.span>
         )}
@@ -89,7 +89,6 @@ function SidebarBody({
   return (
     <>
       <Brand {...brandProps} iconOnly={iconOnly} />
-      <div className="bg-sidebar-border h-px" />
       {header && <div className={cn("px-2 pt-3", iconOnly && "px-1.5")}>{header}</div>}
       <SidebarNav groups={groups} layoutIdPrefix={layoutIdPrefix} onNavigate={onNavigate} />
       {footer && (
@@ -112,14 +111,13 @@ export function Sidebar({ collapsible = true, className, ...props }: SidebarProp
 
   return (
     <>
-      {/* Desktop */}
       <motion.aside
         data-collapsed={collapsed}
         animate={{ width: isIconOnly ? "var(--sidebar-width-collapsed)" : "var(--sidebar-width)" }}
         initial={false}
         transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
         className={cn(
-          "bg-sidebar text-sidebar-foreground border-sidebar-border fixed inset-y-0 left-0 z-30 hidden shrink-0 flex-col border-r lg:flex",
+          "bg-sidebar text-sidebar-foreground fixed inset-y-0 left-0 z-30 hidden shrink-0 flex-col lg:flex",
           className,
         )}
       >
@@ -132,13 +130,12 @@ export function Sidebar({ collapsible = true, className, ...props }: SidebarProp
                 type="button"
                 onClick={toggleCollapsed}
                 aria-label={collapsed ? "Mở rộng thanh bên" : "Thu gọn thanh bên"}
-                className="bg-background border-border text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 absolute top-[calc(var(--topbar-height)/2)] -right-3 grid size-6 -translate-y-1/2 place-items-center rounded-full border shadow-sm transition-colors outline-none focus-visible:ring-[3px]"
-              >
-                {collapsed ? (
-                  <PanelLeftOpen className="size-3.5" />
-                ) : (
-                  <PanelLeftClose className="size-3.5" />
+                className={cn(
+                  "text-sidebar-foreground/80 hover:text-sidebar-foreground focus-visible:ring-sidebar-ring/60 absolute top-[calc(var(--topbar-height)/2)] grid size-7 -translate-y-1/2 place-items-center rounded-md border border-white/20 transition-colors outline-none hover:bg-white/10 focus-visible:ring-[3px]",
+                  isIconOnly ? "bg-sidebar -right-3.5" : "right-3",
                 )}
+              >
+                {collapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
               </button>
             </TooltipTrigger>
             <TooltipContent side="right">
@@ -148,7 +145,6 @@ export function Sidebar({ collapsible = true, className, ...props }: SidebarProp
         )}
       </motion.aside>
 
-      {/* Mobile / tablet */}
       {!isDesktop && (
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetContent

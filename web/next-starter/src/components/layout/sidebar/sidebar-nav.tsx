@@ -53,7 +53,7 @@ export function SidebarNav({
   return (
     <nav
       aria-label="Điều hướng chính"
-      className={cn("scrollbar-thin flex-1 overflow-y-auto px-2 py-3", className)}
+      className={cn("scrollbar-thin flex-1 overflow-y-auto px-2.5 py-4", className)}
     >
       {groups.map((group, index) => (
         <div key={group.key} className={cn(index > 0 && "mt-5")}>
@@ -64,7 +64,7 @@ export function SidebarNav({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
-                className="text-muted-foreground px-2.5 pb-2 text-[0.6875rem] font-semibold tracking-wider uppercase"
+                className="text-sidebar-muted px-2.5 pb-2.5 text-[0.625rem] font-bold tracking-[0.14em] uppercase"
               >
                 {group.label}
               </motion.p>
@@ -73,7 +73,7 @@ export function SidebarNav({
 
           {isIconOnly && index > 0 && <div className="bg-sidebar-border mx-2 mb-3 h-px" />}
 
-          <ul className="space-y-1">
+          <ul className="space-y-1.5">
             {group.items.map((item) => (
               <SidebarNavItem
                 key={item.key}

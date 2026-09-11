@@ -1,16 +1,16 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { WorkflowTemplateCardSkeleton } from "@/features/workflow";
 
-/** Fallback khi điều hướng sang route con chưa sẵn sàng. */
 export default function Loading() {
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
-      <div className="flex flex-col gap-3">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-4 w-96 max-w-full" />
+    <div className="flex w-full flex-col gap-4">
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-7 w-56" />
+        <Skeleton className="h-4 w-80 max-w-full" />
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-28 rounded-xl" />
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:max-w-[64rem]">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <WorkflowTemplateCardSkeleton key={i} />
         ))}
       </div>
     </div>

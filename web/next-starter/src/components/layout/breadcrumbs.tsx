@@ -16,6 +16,7 @@ export type BreadcrumbsProps = {
   groups?: NavGroup[];
   /** Mục đầu tiên (thường là Trang chủ). Truyền `null` để bỏ. */
   home?: BreadcrumbItem | null;
+  separator?: React.ReactNode;
   className?: string;
 };
 
@@ -23,6 +24,7 @@ export function Breadcrumbs({
   items,
   groups,
   home = { label: "Trang chủ", href: "/" },
+  separator,
   className,
 }: BreadcrumbsProps) {
   const pathname = usePathname();
@@ -46,7 +48,8 @@ export function Breadcrumbs({
               key={`${item.label}-${index}`}
               className={cn("min-w-0 items-center gap-1", last ? "flex" : "hidden sm:flex")}
             >
-              {index > 0 && <ChevronRight className="size-3.5 shrink-0 opacity-60" />}
+              {index > 0 &&
+                (separator ?? <ChevronRight className="size-3.5 shrink-0 opacity-60" />)}
               {item.href && !last ? (
                 <Link href={toRoute(item.href)} className="hover:text-foreground truncate transition-colors">
                   {item.label}

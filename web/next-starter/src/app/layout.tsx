@@ -5,8 +5,8 @@ import { QueryProvider } from "@/components/providers/query-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Next Starter",
-  description: "Next.js 15 + TypeScript + Tailwind v4 + shadcn/ui + TanStack Query + Zod + Zustand",
+  title: { default: "Tân An", template: "%s · Tân An" },
+  description: "Hệ thống vận hành quy trình 5 tầng — quản lý hồ sơ vụ việc.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
