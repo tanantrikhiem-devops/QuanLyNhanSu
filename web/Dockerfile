@@ -21,7 +21,7 @@ FROM base AS builder
 
 # Browser gọi thẳng FastAPI nên địa chỉ API phải nằm trong bundle → nhúng lúc
 # BUILD qua ARG. Đổi giá trị thì phải build lại image, restart không đủ.
-ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_API_URL=""
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 COPY --from=deps /app/node_modules ./node_modules
