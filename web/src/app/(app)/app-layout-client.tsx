@@ -1,30 +1,44 @@
 "use client";
 
+import { useState } from "react";
 import { Bell, KeyRound } from "lucide-react";
 
-import { AppShell, Breadcrumbs, Topbar, TopbarSearch, UserMenu } from "@/components/layout";
+import { Sidebar, Topbar, UserMenu } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { navGroups } from "@/config/nav";
 import { RequireAuth, useLogout, useMe } from "@/features/auth";
+import { usePersistedFlag } from "@/hooks/use-persisted-flag";
 import type { User } from "@/lib/api/contracts";
 
 export function AppLayoutClient({ children }: { children: React.ReactNode }) {
   const { data: user } = useMe();
   const logout = useLogout();
+  const [collapsed, setCollapsed] = usePersistedFlag("sidebar:collapsed", false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <AppShell
-      groups={navGroups}
-      brandLogo="TA"
-      brandTitle="TÂN AN"
-      brandSubtitle="Quản lý hồ sơ vụ việc"
-      contentClassName="px-4 py-5 sm:px-5"
-      topbar={
+    <div className="bg-background min-h-svh">
+      <Sidebar
+        groups={navGroups}
+        brandLogo="TA"
+        brandTitle="TÂN AN"
+        brandSubtitle="Quản lý hồ sơ vụ việc"
+        collapsed={collapsed}
+        onCollapsedChange={setCollapsed}
+        mobileOpen={mobileOpen}
+        onMobileOpenChange={setMobileOpen}
+      />
+
+      <div
+        data-collapsed={collapsed}
+        className="flex min-h-svh flex-col transition-[padding] duration-200 lg:pl-(--sidebar-width) lg:data-[collapsed=true]:pl-(--sidebar-width-collapsed)"
+      >
         <Topbar
-          showThemeToggle={false}
+          onMenuClick={() => setMobileOpen(true)}
+          searchPlaceholder="Tìm hồ sơ, khách hàng..."
           actions={
-            <div className="flex items-center gap-3">
+            <>
               <NotificationBell count={11} />
               <span className="border-primary/40 bg-auth-success-bg text-primary hidden h-8 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold sm:inline-flex">
                 <KeyRound className="size-3.5" />
@@ -40,26 +54,14 @@ export function AppLayoutClient({ children }: { children: React.ReactNode }) {
               ) : (
                 <UserMenuSkeleton />
               )}
-            </div>
+            </>
           }
-        >
-          <div className="flex min-w-0 items-center gap-4">
-            <Breadcrumbs
-              groups={navGroups}
-              home={{ label: "Cấu hình hệ thống" }}
-              separator={<span className="opacity-60">/</span>}
-              className="shrink-0"
-            />
-            <TopbarSearch
-              placeholder="Tìm hồ sơ, khách hàng..."
-              className="hidden md:flex"
-            />
-          </div>
-        </Topbar>
-      }
-    >
-      <RequireAuth>{children}</RequireAuth>
-    </AppShell>
+        />
+        <main className="flex-1 px-4 py-5 sm:px-5">
+          <RequireAuth>{children}</RequireAuth>
+        </main>
+      </div>
+    </div>
   );
 }
 

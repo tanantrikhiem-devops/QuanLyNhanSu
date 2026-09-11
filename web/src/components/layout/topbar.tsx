@@ -1,34 +1,38 @@
 "use client";
 
-import * as React from "react";
-import { Menu } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { Menu, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 
-import { useSidebar } from "./sidebar/sidebar-context";
-
 export type TopbarProps = {
-  /** Thường là <Breadcrumbs /> hoặc tiêu đề trang. */
-  children?: React.ReactNode;
-  /** Slot bên phải: nút tạo mới, thông báo, user menu… */
+  onMenuClick: () => void;
+  searchPlaceholder?: string;
+  onSearch?: (keyword: string) => void;
   actions?: React.ReactNode;
-  /** Ô tìm kiếm ở giữa. */
-  search?: React.ReactNode;
-  showThemeToggle?: boolean;
   className?: string;
 };
 
 export function Topbar({
-  children,
+  onMenuClick,
+  searchPlaceholder = "Tìm kiếm...",
+  onSearch,
   actions,
-  search,
-  showThemeToggle = true,
   className,
 }: TopbarProps) {
-  const { setMobileOpen } = useSidebar();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   return (
     <header
@@ -42,24 +46,35 @@ export function Topbar({
         size="icon"
         className="lg:hidden"
         aria-label="Mở menu"
-        onClick={() => setMobileOpen(true)}
+        onClick={onMenuClick}
       >
         <Menu />
       </Button>
 
-      <div className="min-w-0 flex-1 lg:pl-3">{children}</div>
-
-      {search && <div className="hidden md:block">{search}</div>}
-
-      <div className="flex items-center gap-1.5">
-        {actions}
-        {showThemeToggle && (
-          <>
-            {actions && <Separator orientation="vertical" className="mx-1 h-5" />}
-            <ThemeToggle />
-          </>
-        )}
+      <div className="min-w-0 flex-1 lg:pl-3">
+        <form
+          role="search"
+          onSubmit={(event) => {
+            event.preventDefault();
+            onSearch?.(inputRef.current?.value.trim() ?? "");
+          }}
+          className="border-input bg-card focus-within:border-primary focus-within:ring-primary/15 hidden h-8 w-72 items-center gap-2 rounded-lg border px-2.5 transition focus-within:ring-2 md:flex"
+        >
+          <Search className="text-muted-foreground size-3.5 shrink-0" />
+          <input
+            ref={inputRef}
+            type="search"
+            aria-label={searchPlaceholder}
+            placeholder={searchPlaceholder}
+            className="placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-xs outline-none"
+          />
+          <kbd className="border-border text-muted-foreground rounded border px-1.5 py-0.5 font-sans text-[0.625rem]">
+            Ctrl+K
+          </kbd>
+        </form>
       </div>
+
+      {actions && <div className="flex items-center gap-3">{actions}</div>}
     </header>
   );
 }

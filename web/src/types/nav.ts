@@ -33,7 +33,3 @@ export type NavGroup = {
   items: NavItem[];
 };
 
-export type BreadcrumbItem = {
-  label: string;
-  href?: string;
-};

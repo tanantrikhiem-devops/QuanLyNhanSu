@@ -55,37 +55,3 @@ export function getOpenKeys(groups: NavGroup[], pathname: string): string[] {
   groups.forEach((group) => walk(group.items));
   return keys;
 }
-
-/** Điểm "cụ thể" của một nhánh: href active dài nhất — dùng để chọn đúng mục sâu nhất. */
-function branchScore(item: NavItem, pathname: string): number {
-  const own = isNavItemActive(item, pathname) ? (item.href?.length ?? 1) : 0;
-  const child = (item.children ?? []).reduce(
-    (max, c) => Math.max(max, branchScore(c, pathname)),
-    0,
-  );
-  return Math.max(own, child);
-}
-
-/**
- * Chuỗi breadcrumb suy ra từ config nav — dùng khi trang không tự khai báo.
- * Khi nhiều mục cùng khớp prefix (vd `/quy-trinh` và `/quy-trinh/sla`),
- * mục cụ thể hơn được chọn.
- */
-export function getNavTrail(groups: NavGroup[], pathname: string): NavItem[] {
-  const trail: NavItem[] = [];
-
-  const walk = (items: NavItem[]) => {
-    const candidates = items.filter((item) => isNavBranchActive(item, pathname));
-    if (candidates.length === 0) return;
-
-    const best = candidates.reduce((a, b) =>
-      branchScore(b, pathname) > branchScore(a, pathname) ? b : a,
-    );
-
-    trail.push(best);
-    if (best.children?.length) walk(best.children);
-  };
-
-  groups.forEach((group) => walk(group.items));
-  return trail;
-}

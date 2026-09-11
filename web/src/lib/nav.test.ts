@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getNavTrail, getOpenKeys, isNavBranchActive, isNavItemActive } from "@/lib/nav";
+import { getOpenKeys, isNavBranchActive, isNavItemActive } from "@/lib/nav";
 import type { NavGroup } from "@/types/nav";
 
 const groups: NavGroup[] = [
@@ -47,9 +47,5 @@ describe("nhánh menu", () => {
   it("mở sẵn nhánh chứa trang hiện tại", () => {
     expect(getOpenKeys(groups, "/quy-trinh/sla")).toEqual(["workflow"]);
     expect(getOpenKeys(groups, "/bao-cao")).toEqual([]);
-  });
-
-  it("suy ra breadcrumb từ config", () => {
-    expect(getNavTrail(groups, "/quy-trinh/sla").map((i) => i.label)).toEqual(["Quy trình", "SLA"]);
   });
 });

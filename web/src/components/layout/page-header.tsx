@@ -7,7 +7,7 @@ export type PageHeaderProps = {
   description?: React.ReactNode;
   /** Nút hành động chính bên phải. */
   actions?: React.ReactNode;
-  /** Slot phía trên tiêu đề (vd: <Breadcrumbs />). */
+  /** Slot phía trên tiêu đề. */
   above?: React.ReactNode;
   className?: string;
 };
