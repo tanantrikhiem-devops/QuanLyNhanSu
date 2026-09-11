@@ -23,7 +23,7 @@ function DropdownMenuContent({
         data-slot="dropdown-menu-content"
         sideOffset={sideOffset}
         className={cn(
-          "ui-pop bg-popover text-popover-foreground border-border z-50 min-w-40 overflow-hidden rounded-lg border p-1 shadow-lg",
+          "ui-pop z-50 min-w-40 overflow-hidden rounded-lg border border-border bg-white text-foreground opacity-100 shadow-[0_14px_35px_rgb(21_35_29/0.18)] dark:bg-card",
           className,
         )}
         {...props}
@@ -124,7 +124,7 @@ function DropdownMenuSubContent({
   return (
     <DropdownMenuPrimitive.SubContent
       className={cn(
-        "ui-pop bg-popover text-popover-foreground border-border z-50 min-w-40 overflow-hidden rounded-lg border p-1 shadow-lg",
+        "ui-pop z-50 min-w-40 overflow-hidden rounded-lg border border-border bg-white text-foreground opacity-100 shadow-[0_14px_35px_rgb(21_35_29/0.18)] dark:bg-card",
         className,
       )}
       {...props}

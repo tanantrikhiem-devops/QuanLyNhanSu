@@ -5,7 +5,6 @@ import { useState } from "react";
 import { AUTH_ROUTES } from "@/features/auth/routes";
 import { useChangePassword, useResetPassword } from "@/features/auth/use-auth";
 import {
-  PASSWORD_RULES,
   changePasswordFormSchema,
   resetPasswordFormSchema,
 } from "@/features/auth/form-schemas";
@@ -60,13 +59,18 @@ export function ResetPasswordForm({ token }: { token?: string }) {
 
   return (
     <AuthCard
-      title="Đặt mật khẩu mới"
+      title={token ? "Đặt mật khẩu mới" : "Đổi mật khẩu lần đầu"}
       description={
         token
           ? "Tạo mật khẩu mới cho tài khoản của bạn."
-          : "Tài khoản mới cấp bắt buộc đổi mật khẩu trước khi vào hệ thống."
+          : "Bắt buộc đổi mật khẩu trong lần đăng nhập đầu tiên."
       }
     >
+      {!token && (
+        <AuthAlert tone="warning">
+          Đây là lần đăng nhập đầu tiên — hãy đặt mật khẩu riêng trước khi vào hệ thống.
+        </AuthAlert>
+      )}
       <form className="mt-4" onSubmit={handleSubmit} noValidate>
         {!token && (
           <AuthPasswordField
@@ -102,26 +106,20 @@ export function ResetPasswordForm({ token }: { token?: string }) {
           error={fieldError("confirm_password")}
         />
 
-        <div className="bg-auth-note-bg text-auth-note mt-3 rounded-md px-2 py-2 text-[7px] leading-relaxed">
-          <p className="mb-1 font-semibold">MẬT KHẨU PHẢI CÓ</p>
-          {PASSWORD_RULES.map((rule) => (
-            <RuleRow key={rule.label} ok={rule.test(newPassword)} label={rule.label} />
-          ))}
-          <RuleRow ok={matched} label="Mật khẩu phải trùng khớp" />
-          <p className="flex items-center gap-1 opacity-70">
-            <span aria-hidden>–</span>
-            Không trùng 3 mật khẩu gần nhất (máy chủ kiểm tra)
-          </p>
+        <div className="text-auth-muted mt-4 space-y-1 text-[9px] leading-relaxed">
+          <RuleRow ok={newPassword.length >= 8} label="Từ 8 ký tự trở lên" />
+          <RuleRow ok={/[A-Za-z]/.test(newPassword) && /\d/.test(newPassword)} label="Có cả chữ và số" />
+          <RuleRow ok={/[!@#$%^&*(),.?\":{}|<>]/.test(newPassword)} label="Có ký tự đặc biệt (khuyến nghị)" />
         </div>
 
         <AuthSubmitButton pending={mutation.isPending} pendingLabel="Đang cập nhật...">
-          Xác nhận và vào hệ thống
+          Đặt mật khẩu và vào hệ thống
         </AuthSubmitButton>
       </form>
 
       {formError && <AuthAlert tone="danger">{formError}</AuthAlert>}
       {mutation.isSuccess && (
-        <AuthAlert tone="success">{mutation.data ?? "Đổi mật khẩu thành công."}</AuthAlert>
+        <AuthAlert tone="success">{mutation.data ?? "Đặt mật khẩu thành công."}</AuthAlert>
       )}
 
       {token && <AuthOutlineLink href={AUTH_ROUTES.login}>Quay lại đăng nhập</AuthOutlineLink>}
@@ -132,11 +130,10 @@ export function ResetPasswordForm({ token }: { token?: string }) {
 function RuleRow({ ok, label }: { ok: boolean; label: string }) {
   return (
     <p className="flex items-center gap-1">
-      <span className={ok ? "text-auth-success" : "text-auth-danger"} aria-hidden>
-        {ok ? "●" : "○"}
+      <span className={ok ? "text-auth-success" : "text-auth-muted"} aria-hidden>
+        {ok ? "✓" : "○"}
       </span>
-      <span className="sr-only">{ok ? "Đạt: " : "Chưa đạt: "}</span>
-      {label}
+      <span className="sr-only">{ok ? "Đạt: " : "Chưa đạt: "}</span>{label}
     </p>
   );
 }

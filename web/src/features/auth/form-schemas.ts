@@ -24,7 +24,14 @@ const strongPassword = z
 export const loginFormSchema = z.object({ email, password }) satisfies z.ZodType<LoginRequest>;
 
 export const registerFormSchema = z
-  .object({ email, password, confirmPassword: z.string() })
+  .object({
+    fullName: z.string().trim().min(1, "Vui lòng nhập họ và tên"),
+    email,
+    department: z.string().min(1, "Vui lòng chọn phòng / bộ phận"),
+    password,
+    confirmPassword: z.string(),
+    terms: z.literal(true, "Bạn cần đồng ý với nội quy sử dụng hệ thống"),
+  })
   .refine((v) => v.password === v.confirmPassword, {
     message: "Mật khẩu xác nhận không trùng khớp",
     path: ["confirmPassword"],

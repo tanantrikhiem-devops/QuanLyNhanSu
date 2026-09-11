@@ -21,7 +21,7 @@ export function AuthCard({
   return (
     <div
       className={cn(
-        "border-auth-card-border w-full rounded-lg border bg-white px-6 py-7 shadow-[0_8px_22px_rgba(21,35,29,0.08)] sm:px-7",
+        "auth-card border-auth-card-border w-full rounded-none border-0 bg-white shadow-none",
         wide ? "max-w-[360px]" : "max-w-[302px]",
       )}
     >
@@ -75,6 +75,49 @@ export function AuthPasswordField({ id, label, error, ...props }: Omit<InputProp
           {visible ? "Ẩn" : "Hiện"}
         </button>
       </div>
+      <FieldError error={error} />
+    </div>
+  );
+}
+
+export function AuthSelect({
+  id,
+  label,
+  error,
+  children,
+  ...props
+}: Omit<React.ComponentProps<"select">, "className"> & {
+  id: string;
+  label: string;
+  error?: string;
+}) {
+  return (
+    <div className="mt-3 first:mt-0">
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <select id={id} className={cn(inputClass, "mt-1.5 bg-white")} aria-invalid={!!error} {...props}>
+        {children}
+      </select>
+      <FieldError error={error} />
+    </div>
+  );
+}
+
+export function AuthCheckbox({
+  id,
+  error,
+  children,
+  ...props
+}: Omit<React.ComponentProps<"input">, "className" | "type"> & {
+  id: string;
+  error?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="mt-3">
+      <label className="text-auth-text flex items-start gap-2 text-[9px] leading-relaxed" htmlFor={id}>
+        <input id={id} type="checkbox" className="accent-brand mt-0.5 h-3.5 w-3.5 shrink-0" {...props} />
+        <span>{children}</span>
+      </label>
       <FieldError error={error} />
     </div>
   );
@@ -135,6 +178,7 @@ const alertTone = {
   success: "bg-auth-success-bg text-auth-success",
   info: "bg-auth-info-bg text-auth-info",
   note: "bg-auth-note-bg text-auth-note",
+  warning: "bg-[#fff3df] text-[#76511c]",
 } as const;
 
 export function AuthAlert({
